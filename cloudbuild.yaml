@@ -18,7 +18,7 @@ steps:
         CLUSTER=$$(gcloud config get-value container/cluster)
         PROJECT=$$(gcloud config get-value core/project)
         ZONE=$$(gcloud config get-value compute/zone)
-      
+
         gcloud container clusters get-credentials "$${CLUSTER}" \
           --project "$${PROJECT}" \
           --zone "$${ZONE}"
@@ -26,7 +26,7 @@ steps:
       - name: 'kube'
         path: /kube
 
-  # Apply the Kubernetes configuration files.
+  # Update the kompose deployment.
   - name: 'gcr.io/cloud-builders/gcloud'
     env:
       - 'KUBECONFIG=/kube/config'
@@ -34,7 +34,11 @@ steps:
     args:
       - '-c'
       - |
-        kubectl apply --recursive -f kubernetes
+        curl -L https://github.com/kubernetes/kompose/releases/download/v1.1.0/kompose-linux-amd64 -o kompose
+        chmod +x kompose
+        mv ./kompose /usr/local/bin/kompose
+        kompose down
+        kompose up
     volumes:
       - name: 'kube'
         path: /kube
